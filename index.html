@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Ledger & Calculator</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts for a consistent look -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        /* --- UNIFIED DARK THEME --- */
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #1a1a1a;
+            --bg-tertiary: #2a2a2a;
+            --text-primary: #f0f0f0;
+            --text-secondary: #a0a0a0;
+            --border-color: #444444;
+            --accent-color: #4f46e5; /* Indigo */
+            --accent-hover: #6366f1;
+            --success-color: #22c55e; /* Green */
+            --danger-color: #ef4444;  /* Red */
+            --warning-color: #f59e0b; /* Amber */
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+        }
+
+        /* --- FONT STYLES --- */
+        .font-body { font-family: 'Inter', sans-serif; }
+        .font-mono { font-family: 'Space Mono', monospace; }
+        .font-terminal { font-family: 'Source Code Pro', monospace; }
+
+        /* --- GENERAL COMPONENT STYLING --- */
+        .main-container {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+        }
+
+        /* --- TAB NAVIGATION --- */
+        .tab-button {
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+        }
+        .tab-button.active {
+            color: var(--text-primary);
+            border-bottom-color: var(--accent-color);
+        }
+        .tab-button:not(.active) {
+            color: var(--text-secondary);
+        }
+        .tab-button:hover:not(.active) {
+            color: var(--text-primary);
+            border-bottom-color: var(--border-color);
+        }
+        .tab-panel {
+            display: none; /* Hidden by default */
+        }
+        .tab-panel.active {
+            display: block; /* Shown when active */
+        }
+
+        /* --- FORM ELEMENTS --- */
+        input[type="number"], input[type="date"], input[type="text"], select {
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 0.75rem 1rem;
+            transition: all 0.2s ease-in-out;
+            outline: none;
+        }
+        input:focus, select:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.5);
+        }
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+            cursor: pointer;
+        }
+        input[type="checkbox"] {
+            background-color: var(--bg-tertiary);
+            border-color: var(--border-color);
+        }
+        input[type="checkbox"]:checked {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+
+        /* --- BUTTONS --- */
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            text-align: center;
+        }
+        .btn-primary {
+            background-color: var(--accent-color);
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: var(--accent-hover);
+        }
+        .btn-secondary {
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+        .btn-secondary:hover {
+            background-color: var(--border-color);
+        }
+        .btn-success {
+             background-color: var(--success-color);
+             color: white;
+        }
+        .btn-success:hover {
+            background-color: #16a34a;
+        }
+        
+        /* --- CALCULATOR SPECIFIC STYLES --- */
+        .mode-button {
+            transition: background-color 0.2s, color 0.2s;
+            background-color: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+        }
+        .mode-button.active {
+            background-color: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+        .star-rating input[type="radio"] { display: none; }
+        .star-rating label {
+            font-size: 2.5rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .star-rating input[type="radio"]:checked ~ label,
+        .star-rating label:hover,
+        .star-rating label:hover ~ label {
+            color: var(--warning-color);
+        }
+        .benefit-toggle-label {
+            transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+            cursor: pointer;
+            background-color: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+        }
+        input[name="four_star_benefit"]:checked + .benefit-toggle-label {
+            background-color: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+        
+        /* --- LEDGER SPECIFIC STYLES --- */
+        .ledger-list ul { list-style: none; padding: 0; margin: 0; }
+        .ledger-list li {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            align-items: center;
+            padding: 1rem 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+            transition: background-color 0.2s ease-in-out;
+        }
+        .ledger-list li:hover { background-color: var(--bg-tertiary); }
+        .error-message {
+            color: var(--danger-color);
+            font-size: 0.9rem;
+            margin-top: -0.5rem;
+            margin-bottom: 0.5rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+            height: 0;
+        }
+        .error-message.visible { opacity: 1; height: auto; }
+        .delete-btn {
+            color: var(--text-secondary);
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 50%;
+            line-height: 1;
+            transition: all 0.2s;
+        }
+        .delete-btn:hover {
+            color: var(--danger-color);
+            background-color: rgba(239, 68, 68, 0.1);
+        }
+
+        /* --- MODAL STYLES --- */
+        .modal-backdrop {
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+        .modal-content {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+        }
+        .hidden { display: none; }
+
+        /* --- SCROLLBAR --- */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-primary); }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
+    </style>
+</head>
+<body class="p-4 sm:p-6 lg:p-8">
+
+    <div class="container mx-auto max-w-4xl w-full">
+        <!-- Main Application Header -->
+        <header class="text-center mb-8">
+            <h1 class="text-3xl sm:text-4xl font-bold font-mono">Dashboard</h1>
+            <p class="text-lg text-gray-400">Deal Calculator & Transaction Ledger</p>
+        </header>
+
+        <!-- Tab Navigation -->
+        <div class="mb-4 border-b border-gray-700">
+            <nav class="flex -mb-px space-x-6" aria-label="Tabs">
+                <button id="tab-btn-calculator" class="tab-button active py-3 px-1 text-lg font-medium">Calculator</button>
+                <button id="tab-btn-ledger" class="tab-button py-3 px-1 text-lg font-medium">Ledger</button>
+            </nav>
+        </div>
+
+        <!-- Tab Content -->
+        <main>
+            <!-- Calculator Panel -->
+            <div id="tab-panel-calculator" class="tab-panel active">
+                <div class="main-container p-6 sm:p-8 rounded-2xl">
+                    <!-- Calculator content remains the same -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-400 mb-2 text-center">Calculation Mode</label>
+                        <div class="flex justify-center rounded-lg shadow-sm">
+                            <button id="mode-star" class="mode-button active w-full py-2 px-4 rounded-l-lg">Star Value</button>
+                            <button id="mode-1799" class="mode-button w-full py-2 px-4 rounded-r-lg -ml-px">1799 Premium</button>
+                        </div>
+                    </div>
+                    <div class="space-y-6">
+                        <div id="star-value-inputs">
+                            <label class="block text-lg font-semibold text-gray-200 mb-2 text-center">Star Value</label>
+                            <div id="star-value-selector" class="star-rating flex flex-row-reverse justify-center">
+                                <input type="radio" id="star5" name="star" value="5" checked><label for="star5" title="5 stars">★</label>
+                                <input type="radio" id="star4" name="star" value="4"><label for="star4" title="4 stars">★</label>
+                                <input type="radio" id="star3" name="star" value="3"><label for="star3" title="3 stars">★</label>
+                                <input type="radio" id="star2" name="star" value="2"><label for="star2" title="2 stars">★</label>
+                                <input type="radio" id="star1" name="star" value="1"><label for="star1" title="1 star">★</label>
+                            </div>
+                            <div id="four-star-options" class="hidden mt-4 text-center">
+                                <label class="block text-sm font-medium text-gray-400 mb-2">4-Star Benefit</label>
+                                <div class="flex justify-center rounded-lg shadow-sm">
+                                    <input type="radio" id="four-star-waive" name="four_star_benefit" value="waive" class="hidden" checked>
+                                    <label for="four-star-waive" class="benefit-toggle-label w-full py-2 px-4 rounded-l-lg">Waive 3 Cam Fees</label>
+                                    <input type="radio" id="four-star-discount" name="four_star_benefit" value="discount" class="hidden">
+                                    <label for="four-star-discount" class="benefit-toggle-label w-full py-2 px-4 rounded-r-lg -ml-px">$400 Discount</label>
+                                </div>
+                            </div>
+                            <div class="mt-6">
+                                <label for="starEquipmentCost" class="block text-sm font-medium text-gray-400">Base Equipment Cost (Smart Hub)</label>
+                                <div class="mt-1 relative rounded-md shadow-sm">
+                                    <div class="pointer-events-none absolute inset-y-0 left-0 pl-3 flex items-center"><span class="text-gray-500 sm:text-sm">$</span></div>
+                                    <input type="number" id="starEquipmentCost" value="499.99" class="w-full pl-7 pr-4 py-2 rounded-md">
+                                </div>
+                            </div>
+                        </div>
+                        <div id="premium-1799-inputs" class="hidden"></div>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-x-6 pt-4 border-t border-gray-700">
+                            <div class="flex items-center justify-center">
+                                <input type="checkbox" id="installationToggle" class="h-4 w-4 rounded" checked/>
+                                <label for="installationToggle" class="ml-2 text-sm font-medium text-gray-400">Include Install?</label>
+                            </div>
+                            <div class="flex items-center justify-center">
+                                <input type="checkbox" id="payInFullToggle" class="h-4 w-4 rounded"/>
+                                <label for="payInFullToggle" class="ml-2 text-sm font-medium text-gray-400">Pay in Full?</label>
+                            </div>
+                            <div class="flex items-center justify-center">
+                                <input type="checkbox" id="taxToggle" class="h-4 w-4 rounded"/>
+                                <label for="taxToggle" class="ml-2 text-sm font-medium text-gray-400">Include Est. Tax?</label>
+                            </div>
+                        </div>
+                        <div class="pt-4">
+                            <label class="block text-sm font-medium text-gray-400 mb-2">Additional Products</label>
+                            <div id="products-list" class="mt-2 space-y-2"></div>
+                            <button id="add-product-btn" type="button" class="mt-3 text-sm font-medium text-indigo-400 hover:text-indigo-300">+ Add Product</button>
+                        </div>
+                    </div>
+                    <div class="mt-8 pt-6 border-t border-gray-700">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                            <div class="p-4 bg-black/30 rounded-lg">
+                                <h3 class="text-lg font-semibold text-white mb-3 text-center">Customer Costs</h3>
+                                <div class="space-y-2 text-sm text-gray-400">
+                                    <div class="flex justify-between"><span>Install:</span><span id="upfrontCost" class="font-bold text-gray-200">$199.99</span></div>
+                                    <div id="monthly-loc-wrapper" class="flex justify-between">
+                                        <span id="monthly-loc-label">Monthly LOC (32 mo):</span>
+                                        <span id="monthlyLoc" class="font-bold text-gray-200">$0.00</span>
+                                    </div>
+                                    <div class="flex justify-between"><span>Base RMR:</span><span id="baseRmr" class="font-bold text-gray-200">$0.00</span></div>
+                                    <div class="flex justify-between"><span>Camera RMR:</span><span id="cameraRmr" class="font-bold text-gray-200">$0.00</span></div>
+                                    <div class="flex justify-between font-semibold text-gray-300"><span>Total RMR:</span><span id="totalRmr" class="font-bold text-gray-200">$0.00</span></div>
+                                    <div id="tax-wrapper" class="hidden"><div class="flex justify-between"><span>Est. Monthly Tax:</span><span id="estTax" class="font-bold text-gray-200">$0.00</span></div></div>
+                                    <hr class="my-1 border-gray-700">
+                                    <div class="flex justify-between text-base"><strong>Total Monthly:</strong><strong id="totalMonthly" class="text-indigo-400">$0.00</strong></div>
+                                </div>
+                            </div>
+                            <div id="commission-section" class="p-4 bg-black/30 rounded-lg">
+                                <h3 class="text-lg font-semibold text-white mb-3 text-center">Your Commission</h3>
+                                <div class="space-y-2 text-sm text-gray-400">
+                                    <div class="flex justify-between"><span id="commission-label-1">Base Amount:</span><span id="commissionVal1" class="font-bold text-gray-200">$0.00</span></div>
+                                    <div class="flex justify-between"><span id="commission-label-2">Revenue %:</span><span id="commissionVal2" class="font-bold text-gray-200">$0.00</span></div>
+                                    <hr class="my-1 border-gray-700">
+                                    <div class="flex justify-between text-base"><strong>Total Commission:</strong><strong id="totalCommission" class="text-green-400">$0.00</strong></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="notes-section" class="mt-6 p-4 bg-black/30 border border-gray-700 rounded-lg text-sm text-indigo-300">
+                            <p><strong>Package Requirements:</strong> <span id="packageReq" class="text-gray-300"></span></p>
+                            <p><strong>Cam Fee Details:</strong> <span id="camFeeDetails" class="text-gray-300"></span></p>
+                        </div>
+                    </div>
+                    <div class="mt-6 flex justify-center items-center space-x-4">
+                        <button id="compare-btn" class="btn btn-primary">Compare Deals</button>
+                        <button id="nerd-stats-btn" class="btn btn-success">Stats for Nerds</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ledger Panel -->
+            <div id="tab-panel-ledger" class="tab-panel">
+                <div class="main-container p-6 sm:p-8 rounded-2xl">
+                    <div class="flex flex-col sm:flex-row justify-between sm:items-center border-b border-gray-700 pb-4 mb-6">
+                        <h2 class="text-2xl font-bold font-mono mb-4 sm:mb-0">Ledger History</h2>
+                        <!-- Backup and Load Buttons -->
+                        <div class="flex items-center space-x-2">
+                            <button id="backup-btn" class="btn btn-secondary text-sm">Backup Data</button>
+                            <label for="load-input" class="btn btn-secondary text-sm">Load Data</label>
+                            <input type="file" id="load-input" class="hidden" accept=".json">
+                        </div>
+                    </div>
+
+                    <!-- Form for adding new sales data -->
+                    <form id="sale-form" class="flex flex-col gap-4 mb-6">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <input type="date" id="date-input" required class="rounded-md">
+                            <input type="number" id="amount-input" placeholder="Amount" step="0.01" required class="rounded-md">
+                            <button type="submit" class="btn btn-primary w-full">Add</button>
+                        </div>
+                        <div id="error-container" class="error-message"></div>
+                    </form>
+
+                    <!-- Display area for individual sales -->
+                    <div class="ledger-list-container">
+                        <div class="flex justify-between font-bold text-lg text-gray-400 border-b-2 border-gray-600 pb-2 mb-2">
+                            <span>Total:</span>
+                            <span id="ledger-total">$0.00</span>
+                        </div>
+                        <ul id="sales-list" class="ledger-list">
+                            <li class="font-bold text-gray-400">
+                                <span>Date</span>
+                                <span>Amount</span>
+                                <span></span> <!-- Placeholder for delete button column -->
+                            </li>
+                            <!-- Transactions will be dynamically inserted here -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODALS -->
+    <div id="comparison-modal" class="fixed inset-0 modal-backdrop flex items-center justify-center p-4 hidden">
+        <div class="modal-content rounded-2xl w-full max-w-4xl max-h-full overflow-y-auto"><div class="p-6"><div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-bold text-white">Deal Comparison</h2><button id="close-modal-btn" class="text-gray-400 hover:text-white text-3xl leading-none">&times;</button></div><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div id="star-comparison" class="p-4 bg-black/30 rounded-lg"></div><div id="premium-comparison" class="p-4 bg-black/30 rounded-lg"></div></div><div class="mt-6 pt-4 border-t border-gray-700 col-span-1 md:col-span-2"><h3 class="text-lg font-semibold text-white mb-3 text-center">Comparison Summary</h3><div id="comparison-summary" class="space-y-3 text-sm text-gray-300"></div></div></div></div>
+    </div>
+    <div id="nerd-modal" class="fixed inset-0 modal-backdrop flex items-center justify-center p-4 hidden">
+        <div class="modal-content rounded-lg border-2 border-green-500 w-full max-w-2xl max-h-full overflow-y-auto shadow-2xl shadow-green-500/20"><div class="p-1"><div class="flex justify-between items-center bg-black/50 p-2"><h2 class="text-lg font-bold text-green-400 font-terminal">C:\> CALC_STATS.EXE</h2><button id="close-nerd-modal-btn" class="text-gray-400 hover:text-white text-2xl font-bold">&times;</button></div><div id="nerd-stats-content" class="p-4 text-green-400 font-terminal text-sm whitespace-pre-wrap"></div></div></div>
+    </div>
+    <div id="disclaimer-modal" class="fixed inset-0 modal-backdrop flex items-center justify-center p-4">
+        <div class="modal-content rounded-2xl w-full max-w-md text-center p-8"><h2 class="text-2xl font-bold text-white mb-4">Welcome!</h2><p class="text-gray-400 mb-6">This calculator is for estimation purposes only. Please confirm all details with the customer.</p><button id="disclaimer-ack-btn" class="btn btn-primary w-full">I Understand</button></div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- TAB NAVIGATION LOGIC ---
+            const tabs = {
+                calculator: { btn: document.getElementById('tab-btn-calculator'), panel: document.getElementById('tab-panel-calculator') },
+                ledger: { btn: document.getElementById('tab-btn-ledger'), panel: document.getElementById('tab-panel-ledger') }
+            };
+
+            const switchTab = (tabName) => {
+                Object.values(tabs).forEach(tab => {
+                    tab.btn.classList.remove('active');
+                    tab.panel.classList.remove('active');
+                });
+                tabs[tabName].btn.classList.add('active');
+                tabs[tabName].panel.classList.add('active');
+            };
+
+            tabs.calculator.btn.addEventListener('click', () => switchTab('calculator'));
+            tabs.ledger.btn.addEventListener('click', () => switchTab('ledger'));
+
+            // --- INITIALIZE BOTH APPS ---
+            initializeCalculator();
+            initializeLedger();
+        });
+
+        // --- SCOPED CALCULATOR LOGIC ---
+        function initializeCalculator() {
+            // NOTE: All calculator logic is self-contained and does not need changes
+            // for the local-first approach. It remains as it was.
+            let currentMode = 'star';
+            const PRODUCTS = {'dws': { name: 'Door & Window Sensor', price: 50.00, isCamera: false },'motion': { name: 'Motion Sensor', price: 100.00, isCamera: false },'glass': { name: 'Glass Break Detector', price: 100.00, isCamera: false },'ff': { name: 'Smoke & CO Monitor (FF)', price: 100.00, isCamera: false },'water': { name: 'Water Sensor', price: 50.00, isCamera: false },'pendant': { name: 'Emergency Pendant', price: 50.00, isCamera: false },'fob': { name: 'Key Fob', price: 50.00, isCamera: false },'keypad': { name: 'Keypad', price: 50.00, isCamera: false },'lock': { name: 'Kwikset Smart Lock', price: 179.99, isCamera: false },'gdc': { name: 'Garage Door Controller', price: 99.99, isCamera: false },'thermo': { name: 'Smart Thermostat', price: 199.99, isCamera: false },'plug': { name: 'Smart Plug', price: 50.00, isCamera: false },'dbcp': { name: 'Doorbell Camera Pro', price: 249.99, isCamera: true },'icp': { name: 'Indoor Camera Pro', price: 249.99, isCamera: true },'ocp': { name: 'Outdoor Camera Pro', price: 399.99, isCamera: true },'spotlight': { name: 'Spotlight Pro', price: 249.99, isCamera: false },};
+            const starData = {1: { commissionBase: 10, commissionPercent: 0.02, rmr: 34.99, packageReq: 'Panel', camFeeDetails: 'All cam fees waived', camFeesWaived: Infinity },2: { commissionBase: 15, commissionPercent: 0.05, rmr: 39.99, packageReq: 'Panel', camFeeDetails: 'No cam fees waived', camFeesWaived: 0 },3: { commissionBase: 25, commissionPercent: 0.07, rmr: 44.99, packageReq: 'Panel + 1 camera', camFeeDetails: 'One cam fee waived', camFeesWaived: 1 },4: { commissionBase: 30, commissionPercent: 0.10, rmr: 49.99, packageReq: 'Panel + 2 cameras', camFeeDetails: '3 cam fees waived OR $400 equipment discount', camFeesWaived: 3 },5: { commissionBase: 40, commissionPercent: 0.12, rmr: 59.99, packageReq: 'Panel + 2 cameras', camFeeDetails: '2 cam fees waived', camFeesWaived: 2 }};
+            const AVG_TAX_RATE = 0.075;
+            const formatCurrency = (amount) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+            const modeStarBtn = document.getElementById('mode-star');
+            const mode1799Btn = document.getElementById('mode-1799');
+            const starInputs = document.getElementById('star-value-inputs');
+            const premiumInputs = document.getElementById('premium-1799-inputs');
+            const commissionLabel1 = document.getElementById('commission-label-1');
+            const commissionLabel2 = document.getElementById('commission-label-2');
+            const addProductBtn = document.getElementById('add-product-btn');
+            const productsList = document.getElementById('products-list');
+            const starSelector = document.getElementById('star-value-selector');
+            const starEquipmentCostInput = document.getElementById('starEquipmentCost');
+            const installationToggle = document.getElementById('installationToggle');
+            const payInFullToggle = document.getElementById('payInFullToggle');
+            const taxToggle = document.getElementById('taxToggle');
+            const fourStarOptions = document.getElementById('four-star-options');
+            const fourStarBenefitRadios = document.querySelectorAll('input[name="four_star_benefit"]');
+            const compareBtn = document.getElementById('compare-btn');
+            const modal = document.getElementById('comparison-modal');
+            const closeModalBtn = document.getElementById('close-modal-btn');
+            const nerdStatsBtn = document.getElementById('nerd-stats-btn');
+            const nerdModal = document.getElementById('nerd-modal');
+            const closeNerdModalBtn = document.getElementById('close-nerd-modal-btn');
+            const disclaimerModal = document.getElementById('disclaimer-modal');
+            const disclaimerAckBtn = document.getElementById('disclaimer-ack-btn');
+            function setMode(mode) { currentMode = mode; if (mode === 'star') { modeStarBtn.classList.add('active'); mode1799Btn.classList.remove('active'); starInputs.classList.remove('hidden'); premiumInputs.classList.add('hidden'); commissionLabel1.textContent = 'Base Amount:'; commissionLabel2.textContent = 'Revenue %:'; } else { modeStarBtn.classList.remove('active'); mode1799Btn.classList.add('active'); starInputs.classList.add('hidden'); premiumInputs.classList.remove('hidden'); commissionLabel1.textContent = 'Total Equipment:'; commissionLabel2.textContent = 'Commission (10%):'; } calculate(); }
+            function calculate() { const results = (currentMode === 'star') ? getStarCalculations() : get1799Calculations(); updateDisplay(results); }
+            function updateDisplay(results) { document.getElementById('upfrontCost').textContent = formatCurrency(results.upfrontCost); document.getElementById('baseRmr').textContent = formatCurrency(results.baseRmr); document.getElementById('cameraRmr').textContent = formatCurrency(results.cameraRmr); document.getElementById('totalRmr').textContent = formatCurrency(results.totalRmr); document.getElementById('estTax').textContent = formatCurrency(results.estimatedTax); document.getElementById('monthlyLoc').textContent = formatCurrency(results.monthlyLoc); document.getElementById('totalMonthly').textContent = formatCurrency(results.totalMonthly); if (currentMode === 'star') { document.getElementById('commissionVal1').textContent = formatCurrency(results.commissionBase); document.getElementById('commissionVal2').textContent = `${formatCurrency(results.commissionFromPercent)} (${(results.commissionPercent * 100).toFixed(0)}%)`; } else { document.getElementById('commissionVal1').textContent = formatCurrency(results.totalEquipmentCost); document.getElementById('commissionVal2').textContent = formatCurrency(results.totalCommission); } document.getElementById('totalCommission').textContent = formatCurrency(results.totalCommission); document.getElementById('packageReq').textContent = results.packageReq; document.getElementById('camFeeDetails').textContent = results.camFeeDetails; document.getElementById('monthly-loc-wrapper').classList.toggle('hidden', payInFullToggle.checked || results.term <= 0); document.getElementById('monthly-loc-label').textContent = `Monthly LOC (${results.term} mo):`; document.getElementById('tax-wrapper').classList.toggle('hidden', !taxToggle.checked); }
+            function getStarCalculations() { const selectedStar = document.querySelector('input[name="star"]:checked').value; let data = { ...starData[selectedStar] }; const baseEquipmentCost = parseFloat(starEquipmentCostInput.value) || 0; const productData = getProductData(); let equipmentDiscount = 0; if (selectedStar === '4') { const benefit = document.querySelector('input[name="four_star_benefit"]:checked').value; if (benefit === 'discount') { data.camFeesWaived = 0; equipmentDiscount = 400; data.camFeeDetails = '$400 equipment discount applied.'; } else { data.camFeesWaived = 3; equipmentDiscount = 0; data.camFeeDetails = '3 cam fees waived.'; } } const totalEquipmentCost = Math.max(0, baseEquipmentCost + productData.equipmentCost - equipmentDiscount); const cameraCount = productData.cameraCount; const includeInstallation = installationToggle.checked; const payInFull = payInFullToggle.checked; const includeTax = taxToggle.checked; let upfrontCost = includeInstallation ? 199.99 : 0; const chargeableCameras = Math.max(0, cameraCount - data.camFeesWaived); const cameraRmr = chargeableCameras * 5.00; const totalRmr = data.rmr + cameraRmr; const estimatedTax = includeTax ? totalRmr * AVG_TAX_RATE : 0; let totalMonthly = totalRmr + estimatedTax; const term = getFinancingTerm(totalEquipmentCost); let monthlyLoc = 0; if (payInFull) { upfrontCost += totalEquipmentCost; } else if (term > 0) { monthlyLoc = totalEquipmentCost / term; totalMonthly += monthlyLoc; } const commissionableTotal = totalEquipmentCost + (includeInstallation ? 199.99 : 0); const commissionFromPercent = commissionableTotal * data.commissionPercent; const totalCommission = data.commissionBase + commissionFromPercent; return { mode: 'Star Value', starLevel: selectedStar, upfrontCost, baseRmr: data.rmr, cameraRmr, totalRmr, estimatedTax, totalMonthly, term, monthlyLoc, baseEquipmentCost, addedEquipmentCost: productData.equipmentCost, totalEquipmentCost, cameraCount, camFeesWaived: data.camFeesWaived, chargeableCameras, commissionableTotal, commissionBase: data.commissionBase, commissionFromPercent, totalCommission, commissionPercent: data.commissionPercent, packageReq: data.packageReq, camFeeDetails: data.camFeeDetails, inputs: { includeInstallation, payInFull, includeTax } }; }
+            function get1799Calculations() { const BASE_EQUIPMENT = 1799.99; const BASE_RMR = 19.99; const CAMERA_FEE_PER = 5.00; const COMMISSION_RATE = 0.10; const productData = getProductData(); let totalEquipmentCost = BASE_EQUIPMENT + productData.equipmentCost; let dbcpInList = Array.from(productsList.querySelectorAll('.product-select')).some(select => select.value === 'dbcp'); if (dbcpInList) { totalEquipmentCost -= PRODUCTS['dbcp'].price; } const includeInstallation = installationToggle.checked; const payInFull = payInFullToggle.checked; const includeTax = taxToggle.checked; let upfrontCost = includeInstallation ? 199.99 : 0; const cameraRmr = productData.cameraCount * CAMERA_FEE_PER; const totalRmr = BASE_RMR + cameraRmr; const estimatedTax = includeTax ? totalRmr * AVG_TAX_RATE : 0; let totalMonthly = totalRmr + estimatedTax; const term = getFinancingTerm(totalEquipmentCost); let monthlyLoc = 0; if (payInFull) { upfrontCost += totalEquipmentCost; } else if (term > 0) { monthlyLoc = totalEquipmentCost / term; totalMonthly += monthlyLoc; } const commissionableTotal = totalEquipmentCost + (includeInstallation ? 199.99 : 0); const totalCommission = commissionableTotal * COMMISSION_RATE; const packageReq = dbcpInList ? 'Panel + DBCP included (hardware free).' : 'Panel included. Add a DBCP for free hardware.'; return { mode: '1799 Premium', upfrontCost, baseRmr: BASE_RMR, cameraRmr, totalRmr, estimatedTax, totalMonthly, term, monthlyLoc, baseEquipmentCost: BASE_EQUIPMENT, addedEquipmentCost: productData.equipmentCost - (dbcpInList ? PRODUCTS['dbcp'].price : 0), totalEquipmentCost, cameraCount: productData.cameraCount, isDBCPIncluded: dbcpInList, commissionableTotal, totalCommission, commissionPercent: COMMISSION_RATE, packageReq: packageReq, camFeeDetails: '$5/mo fee per camera is non-waivable.', inputs: { includeInstallation, payInFull, includeTax } }; }
+            function getProductData() { let e = 0, t = 0; return productsList.querySelectorAll(".product-row").forEach(r => { const o = r.querySelector(".product-select").value, s = parseInt(r.querySelector(".product-qty").value, 10) || 0; o && s > 0 && (e += PRODUCTS[o].price * s, PRODUCTS[o].isCamera && (t += s)) }), { equipmentCost: e, cameraCount: t } }
+            function getFinancingTerm(e) { return e < 150 ? 0 : e >= 150 && e < 499 ? 6 : e >= 499 && e < 1e3 ? 32 : 60 }
+            function addProductRow(e = "", t = 1) { const r = document.createElement("div"); r.className = "product-row flex items-center space-x-2"; const o = document.createElement("select"); o.className = "product-select w-full px-2 py-2 rounded-md"; let s = '<option value="">-- Select Product --</option>'; for (const [a, n] of Object.entries(PRODUCTS)) s += `<option value="${a}">${n.name}</option>`; o.innerHTML = s, o.value = e; const l = document.createElement("input"); l.type = "number", l.value = t, l.min = 1, l.className = "product-qty w-20 px-2 py-2 text-center rounded-md"; const c = document.createElement("button"); c.type = "button", c.innerHTML = "&times;", c.className = "remove-product-btn text-red-500 hover:text-red-400 p-1 text-2xl leading-none", r.appendChild(o), r.appendChild(l), r.appendChild(c), productsList.appendChild(r), o.addEventListener("change", calculate), l.addEventListener("input", calculate), c.addEventListener("click", () => { r.remove(), calculate() }) }
+            function populateComparison() { const e = getStarCalculations(), t = get1799Calculations(), r = e => `<h3 class="text-lg font-semibold text-white mb-3 text-center">${e.mode} Deal</h3><div class="space-y-2 text-sm text-gray-400"><div class="flex justify-between"><span>Install:</span><span class="font-bold text-gray-200">${formatCurrency(e.upfrontCost)}</span></div><div class="flex justify-between"><span>Monthly LOC (${e.term} mo):</span><span class="font-bold text-gray-200">${formatCurrency(e.monthlyLoc)}</span></div><div class="flex justify-between"><span>Total RMR:</span><span class="font-bold text-gray-200">${formatCurrency(e.totalRmr)}</span></div><hr class="my-1 border-gray-700"><div class="flex justify-between text-base"><strong>Total Monthly:</strong><strong class="text-indigo-400">${formatCurrency(e.totalMonthly)}</strong></div><hr class="my-1 border-gray-700"><div class="flex justify-between text-base"><strong>Commission:</strong><strong class="text-green-400">${formatCurrency(e.totalCommission)}</strong></div></div>`; document.getElementById("star-comparison").innerHTML = r(e), document.getElementById("premium-comparison").innerHTML = r(t); let o = '<div class="space-y-2 text-center">'; const s = e.totalMonthly - t.totalMonthly, l = e.totalCommission - t.totalCommission; o += s > .01 ? `<p><strong>Monthly Cost:</strong> Star Value is <span class="font-bold text-red-400">${formatCurrency(s)}</span> more expensive.</p>` : s < -.01 ? `<p><strong>Monthly Cost:</strong> 1799 Premium is <span class="font-bold text-red-400">${formatCurrency(Math.abs(s))}</span> more expensive.</p>` : "<p><strong>Monthly Cost:</strong> The monthly cost is identical.</p>", o += l > .01 ? `<p><strong>Commission:</strong> You earn <span class="font-bold text-green-400">${formatCurrency(l)}</span> more with Star Value.</p>` : l < -.01 ? `<p><strong>Commission:</strong> You earn <span class="font-bold text-green-400">${formatCurrency(Math.abs(l))}</span> more with 1799 Premium.</p>` : "<p><strong>Commission:</strong> The commission is identical.</p>", o += "</div>", document.getElementById("comparison-summary").innerHTML = o, modal.classList.remove("hidden") }
+            function populateNerdStats() { const e = "star" === currentMode ? getStarCalculations() : get1799Calculations(); let t = `> Running analysis for: ${e.mode} Deal\n`; t += `> Timestamp: ${new Date().toLocaleString()}\n\n`, t += "[INPUTS]\n", t += `> Installation Included: ${e.inputs.includeInstallation}\n`, t += `> Paid in Full: ${e.inputs.payInFull}\n`, t += `> Tax Included: ${e.inputs.includeTax}\n\n`, t += "[EQUIPMENT COST CALCULATION]\n", t += "Star Value" === e.mode ? `> Base Equipment (Hub): ............ ${formatCurrency(e.baseEquipmentCost)}\n` : `> Base Equipment (1799 Kit): ....... ${formatCurrency(e.baseEquipmentCost)}\n> Included Doorbell Pro: ........... ${e.isDBCPIncluded} (Hardware cost removed from total)\n`, t += `> Added Equipment Cost: ............ ${formatCurrency(e.addedEquipmentCost)}\n`, t += "-------------------------------------------\n", t += `> TOTAL EQUIPMENT COST: ............. ${formatCurrency(e.totalEquipmentCost)}\n\n`, t += "[RMR CALCULATION]\n", t += `> Base RMR: ........................ ${formatCurrency(e.baseRmr)}\n`, t += "Star Value" === e.mode ? `> Total Cameras Added: ............. ${e.cameraCount}\n> Waived Camera Fees (${e.starLevel}-Star): .... ${e.camFeesWaived}\n> Chargeable Cameras: .............. ${e.chargeableCameras}\n> Camera RMR (${e.chargeableCameras} x $5.00): ......... ${formatCurrency(e.cameraRmr)}\n` : `> Total Cameras in List: ........... ${e.cameraCount}\n> Camera RMR (${e.cameraCount} x $5.00): ......... ${formatCurrency(e.cameraRmr)}\n`, t += "-------------------------------------------\n", t += `> TOTAL RMR: ........................ ${formatCurrency(e.totalRmr)}\n\n`, t += "[FINAL MONTHLY COST]\n", t += `> Total RMR: ........................ ${formatCurrency(e.totalRmr)}\n`, t += e.inputs.payInFull ? `> Monthly LOC: .................... ${formatCurrency(0)} (Paid in full)\n` : `> Financing Term (for ${formatCurrency(e.totalEquipmentCost)}): ${e.term} months\n> Monthly LOC (${formatCurrency(e.totalEquipmentCost)} / ${e.term}): ... ${formatCurrency(e.monthlyLoc)}\n`, t += `> Estimated Tax (${(AVG_TAX_RATE*100).toFixed(1)}% of RMR): .. ${formatCurrency(e.estimatedTax)}\n`, t += "-------------------------------------------\n", t += `> TOTAL MONTHLY: .................... ${formatCurrency(e.totalMonthly)}\n\n`, t += "[COMMISSION CALCULATION]\n", t += `> Commissionable Total (Equip+Install): ${formatCurrency(e.commissionableTotal)}\n`, t += "Star Value" === e.mode ? `> Base Commission (${e.starLevel}-Star): ....... ${formatCurrency(e.commissionBase)}\n> Revenue Share (${100*e.commissionPercent}% of Total): .. ${formatCurrency(e.commissionFromPercent)}\n` : `> Revenue Share (${100*e.commissionPercent}% of Total): .. ${formatCurrency(e.totalCommission)}\n`, t += "-------------------------------------------\n", t += `> TOTAL COMMISSION: .................. ${formatCurrency(e.totalCommission)}\n\n`, t += "> Analysis complete.", document.getElementById("nerd-stats-content").textContent = t, nerdModal.classList.remove("hidden") }
+            modeStarBtn.addEventListener('click', () => setMode('star')); mode1799Btn.addEventListener('click', () => setMode('1799')); starSelector.addEventListener('change', (e) => { fourStarOptions.classList.toggle('hidden', e.target.value !== '4'); calculate(); }); fourStarBenefitRadios.forEach(radio => radio.addEventListener('change', calculate)); [starEquipmentCostInput, installationToggle, payInFullToggle, taxToggle].forEach(el => el.addEventListener('input', calculate)); addProductBtn.addEventListener('click', () => addProductRow()); compareBtn.addEventListener('click', populateComparison); closeModalBtn.addEventListener('click', () => modal.classList.add('hidden')); modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.add('hidden'); }); nerdStatsBtn.addEventListener('click', populateNerdStats); closeNerdModalBtn.addEventListener('click', () => nerdModal.classList.add('hidden')); nerdModal.addEventListener('click', (e) => { if (e.target === nerdModal) nerdModal.classList.add('hidden'); }); disclaimerAckBtn.addEventListener('click', () => { localStorage.setItem('disclaimerAcknowledged', 'true'); disclaimerModal.classList.add('hidden'); });
+            if (localStorage.getItem('disclaimerAcknowledged') === 'true') { disclaimerModal.classList.add('hidden'); }
+            fourStarOptions.classList.toggle('hidden', document.querySelector('input[name="star"]:checked').value !== '4');
+            calculate();
+        }
+
+        // --- SCOPED LEDGER LOGIC ---
+        function initializeLedger() {
+            // DOM element references
+            const saleForm = document.getElementById('sale-form');
+            const dateInput = document.getElementById('date-input');
+            const amountInput = document.getElementById('amount-input');
+            const salesList = document.getElementById('sales-list');
+            const errorContainer = document.getElementById('error-container');
+            const ledgerTotalEl = document.getElementById('ledger-total');
+            const backupBtn = document.getElementById('backup-btn');
+            const loadInput = document.getElementById('load-input');
+
+            // The single source of truth for transactions
+            let transactions = [];
+            const STORAGE_KEY = 'ledgerTransactions';
+
+            const formatCurrency = (value) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
+            
+            /**
+             * Saves the current transactions array to localStorage.
+             */
+            const saveTransactions = () => {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+            };
+
+            /**
+             * Renders the list of transactions to the UI and updates the total.
+             */
+            const renderTransactions = () => {
+                // Clear existing transactions from the list, keeping the header
+                const header = salesList.querySelector('li:first-child');
+                salesList.innerHTML = '';
+                if (header) salesList.appendChild(header);
+
+                // Sort transactions by date in descending order (most recent first)
+                const sortedTransactions = [...transactions].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+                let total = 0;
+                sortedTransactions.forEach((transaction, index) => {
+                    const listItem = document.createElement('li');
+                    listItem.dataset.index = index; // Store original index for deletion
+
+                    // Format the date for better readability (and handle timezone correctly)
+                    const date = new Date(transaction.date);
+                    const userTimezoneOffset = date.getTimezoneOffset() * 60000;
+                    const adjustedDate = new Date(date.getTime() + userTimezoneOffset);
+
+                    const formattedDate = adjustedDate.toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+
+                    listItem.innerHTML = `
+                        <span>${formattedDate}</span>
+                        <span>${formatCurrency(transaction.amount)}</span>
+                        <button class="delete-btn" title="Delete Transaction">&times;</button>
+                    `;
+                    salesList.appendChild(listItem);
+                    total += transaction.amount;
+                });
+
+                // Update the total display
+                ledgerTotalEl.textContent = formatCurrency(total);
+            };
+            
+            /**
+             * Loads transactions from localStorage when the app starts.
+             */
+            const loadInitialTransactions = () => {
+                const savedData = localStorage.getItem(STORAGE_KEY);
+                if (savedData) {
+                    try {
+                        transactions = JSON.parse(savedData);
+                    } catch (e) {
+                        console.error("Error parsing saved transactions:", e);
+                        transactions = []; // Start fresh if data is corrupted
+                    }
+                }
+                renderTransactions();
+            };
+
+            const showErrorMessage = (message) => {
+                errorContainer.textContent = message;
+                errorContainer.classList.add('visible');
+                setTimeout(() => {
+                    errorContainer.classList.remove('visible');
+                }, 3000);
+            };
+
+            /**
+             * Handles adding a new transaction from the form.
+             */
+            saleForm.addEventListener('submit', (event) => {
+                event.preventDefault();
+
+                const date = dateInput.value;
+                const amount = parseFloat(amountInput.value);
+
+                if (!date) {
+                    showErrorMessage('Please select a date.');
+                    return;
+                }
+                if (isNaN(amount) || amount <= 0) {
+                    showErrorMessage('Please enter a valid amount.');
+                    return;
+                }
+
+                transactions.push({ date, amount });
+                saveAndRender();
+
+                // Reset form
+                dateInput.value = new Date().toISOString().split('T')[0];
+                amountInput.value = '';
+                amountInput.focus();
+            });
+
+            /**
+             * Handles deleting a transaction.
+             */
+            salesList.addEventListener('click', (event) => {
+                if (event.target.classList.contains('delete-btn')) {
+                    const listItem = event.target.closest('li');
+                    const index = parseInt(listItem.dataset.index, 10);
+                    
+                    // Find the actual item to delete from the unsorted array
+                    const itemToDelete = [...transactions].sort((a, b) => new Date(b.date) - new Date(a.date))[index];
+                    const originalIndex = transactions.findIndex(t => t.date === itemToDelete.date && t.amount === itemToDelete.amount);
+
+                    if (originalIndex > -1) {
+                        transactions.splice(originalIndex, 1);
+                        saveAndRender();
+                    }
+                }
+            });
+
+            /**
+             * Central function to save data and update the UI.
+             */
+            function saveAndRender() {
+                saveTransactions();
+                renderTransactions();
+            }
+
+            /**
+             * Handles the backup data functionality.
+             */
+            backupBtn.addEventListener('click', () => {
+                if (transactions.length === 0) {
+                    alert("No data to backup.");
+                    return;
+                }
+                const dataStr = JSON.stringify(transactions, null, 2); // Pretty print JSON
+                const blob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                const date = new Date().toISOString().split('T')[0];
+                a.download = `ledger-backup-${date}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            });
+
+            /**
+             * Handles loading data from a backup file.
+             */
+            loadInput.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const newTransactions = JSON.parse(e.target.result);
+                        // Basic validation: check if it's an array
+                        if (!Array.isArray(newTransactions)) {
+                            throw new Error("Invalid file format: not an array.");
+                        }
+                        // More validation could be added here (e.g., check for date/amount properties)
+
+                        if (confirm("This will overwrite your current ledger data. Are you sure?")) {
+                            transactions = newTransactions;
+                            saveAndRender();
+                        }
+                    } catch (err) {
+                        alert(`Error loading file: ${err.message}`);
+                    } finally {
+                        // Reset the input so the same file can be loaded again
+                        loadInput.value = '';
+                    }
+                };
+                reader.readAsText(file);
+            });
+
+            // --- INITIALIZATION ---
+            dateInput.value = new Date().toISOString().split('T')[0];
+            loadInitialTransactions();
+        }
+    </script>
+</body>
+</html>
